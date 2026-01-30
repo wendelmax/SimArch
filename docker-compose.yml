@@ -1,0 +1,30 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/SimArch.Api/Dockerfile
+    container_name: simarch-api
+    expose:
+      - "80"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: src/SimArch.Web/Dockerfile
+    container_name: simarch-web
+    expose:
+      - "80"
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: .
+      dockerfile: src/SimArch.Gateway/Dockerfile
+    container_name: simarch-gateway
+    ports:
+      - "5000:80"
+    depends_on:
+      - api
+      - web
+    restart: unless-stopped

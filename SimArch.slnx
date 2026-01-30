@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SimArch.App/SimArch.App.csproj" />
+    <Project Path="src/SimArch.Decision/SimArch.Decision.csproj" />
+    <Project Path="src/SimArch.Domain/SimArch.Domain.csproj" />
+    <Project Path="src/SimArch.DSL/SimArch.DSL.csproj" />
+    <Project Path="src/SimArch.Export/SimArch.Export.csproj" />
+    <Project Path="src/SimArch.Simulation/SimArch.Simulation.csproj" />
+    <Project Path="src/SimArch.Api/SimArch.Api.csproj" />
+    <Project Path="src/SimArch.Web/SimArch.Web.csproj" />
+    <Project Path="src/SimArch.Gateway/SimArch.Gateway.csproj" />
+  </Folder>
+</Solution>

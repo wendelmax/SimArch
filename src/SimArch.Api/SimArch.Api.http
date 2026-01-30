@@ -1,0 +1,6 @@
+@SimArch.Api_HostAddress = http://localhost:5044
+
+GET {{SimArch.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

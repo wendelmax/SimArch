@@ -1,0 +1,44 @@
+name: Checkout Flow
+services:
+  - id: gateway
+    name: API Gateway
+    slaMs: 100
+    availability: 99.9
+    scaling:
+      auto: true
+      min: 2
+      max: 20
+    retry:
+      max: 3
+      backoffMs: 100
+      exponential: true
+    timeoutMs: 150
+    circuitBreaker:
+      failureThreshold: 5
+      openDurationMs: 5000
+      successThresholdInHalfOpen: 1
+    bulkhead:
+      maxConcurrency: 10
+    queue:
+      capacity: 100
+    fallback: null
+  - id: payment
+    name: Payment Service
+    slaMs: 200
+    timeoutMs: 300
+    circuitBreaker:
+      failureThreshold: 3
+      openDurationMs: 3000
+    fallback: wallet
+  - id: wallet
+    name: Wallet Fallback
+    slaMs: 500
+flows:
+  - id: checkout
+    name: Checkout
+    steps:
+      - from: User
+        to: gateway
+      - from: gateway
+        to: payment
+        onFailure: wallet

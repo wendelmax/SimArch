@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SimArch.Domain\SimArch.Domain.csproj" />
+    <ProjectReference Include="..\SimArch.DSL\SimArch.DSL.csproj" />
+    <ProjectReference Include="..\SimArch.Simulation\SimArch.Simulation.csproj" />
+  </ItemGroup>
+
+</Project>

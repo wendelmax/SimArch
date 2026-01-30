@@ -1,0 +1,5 @@
+export { RequirementsRightPanel } from './RequirementsRightPanel'
+export { TraceabilityRightPanel } from './TraceabilityRightPanel'
+export { FlowsRightPanel } from './FlowsRightPanel'
+export { DecisionsRightPanel } from './DecisionsRightPanel'
+export { SimulationRightPanel } from './SimulationRightPanel'

@@ -1,0 +1,66 @@
+name: Checkout Flow
+services:
+  - id: gateway
+    name: API Gateway
+    slaMs: 100
+    availability: 99.9
+    timeoutMs: 150
+    circuitBreaker:
+      failureThreshold: 5
+      openDurationMs: 5000
+    fallback: null
+  - id: payment
+    name: Payment Service
+    slaMs: 200
+    timeoutMs: 300
+    circuitBreaker:
+      failureThreshold: 3
+      openDurationMs: 3000
+    fallback: wallet
+  - id: wallet
+    name: Wallet Fallback
+    slaMs: 500
+flows:
+  - id: checkout
+    name: Checkout
+    steps:
+      - from: User
+        to: gateway
+      - from: gateway
+        to: payment
+        onFailure: wallet
+requirements:
+  - id: REQ-001
+    text: O checkout deve responder em ate 500ms (P95)
+    priority: high
+    type: non-functional
+    standardRef: SLA 99.9%
+  - id: REQ-002
+    text: Pagamento deve ter fallback em caso de falha do provedor principal
+    priority: high
+    type: functional
+  - id: REQ-003
+    text: Gateway deve expor API unica para o cliente
+    priority: medium
+    type: functional
+traceabilityLinks:
+  - requirementId: REQ-001
+    linkType: satisfy
+    elementType: service
+    elementId: gateway
+  - requirementId: REQ-001
+    linkType: satisfy
+    elementType: service
+    elementId: payment
+  - requirementId: REQ-002
+    linkType: satisfy
+    elementType: service
+    elementId: payment
+  - requirementId: REQ-002
+    linkType: satisfy
+    elementType: service
+    elementId: wallet
+  - requirementId: REQ-003
+    linkType: satisfy
+    elementType: service
+    elementId: gateway

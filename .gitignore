@@ -1,0 +1,52 @@
+# Build outputs
+**/bin
+**/obj
+**/out
+**/dist
+**/dist-ssr
+**/node_modules
+
+# IDE and editors
+.vs
+.vscode
+.idea
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and debug
+*.log
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test and coverage
+**/coverage
+**/.nyc_output
+**/TestResults
+
+# NuGet
+**/packages
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts
+
+# Node
+*.local
+.env
+.env.local
+.env.*.local
+
+# Misc
+*.swp
+*.swo
+*~
