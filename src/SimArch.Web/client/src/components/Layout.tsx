@@ -1,7 +1,15 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { SimulationBottomPanel } from './SimulationBottomPanel';
 import type { RibbonMainTab } from './Ribbon';
+import type { ServiceMetricsDto, ConstraintEvaluationDto } from '../api/client';
+
+interface SimulationResultData {
+    elapsedSec: number;
+    serviceMetrics: ServiceMetricsDto[];
+    constraintResults: ConstraintEvaluationDto[];
+}
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -13,11 +21,14 @@ interface LayoutProps {
     onLoadExample?: (yaml: string) => void;
     onSave: () => void;
     onExport: (type: string) => void;
-    onValidate: () => void;
-    onCompareScenarios?: () => void;
-    onCompareCloud?: () => void;
+    onToggleLeftPanel: () => void;
+    showLeftPanel: boolean;
     onTogglePanel: () => void;
     showPanel: boolean;
+    onToggleBottomPanel: () => void;
+    showBottomPanel: boolean;
+    simulationResult?: SimulationResultData | null;
+    simulationViewMode?: 'dashboard' | 'live';
 }
 
 export function Layout({
@@ -30,16 +41,21 @@ export function Layout({
     onLoadExample,
     onSave,
     onExport,
-    onValidate,
-    onCompareScenarios,
-    onCompareCloud,
+    onToggleLeftPanel,
+    showLeftPanel,
     onTogglePanel,
-    showPanel
+    showPanel,
+    onToggleBottomPanel,
+    showBottomPanel,
+    simulationResult,
+    simulationViewMode = 'dashboard',
 }: LayoutProps) {
+    const showLayoutBottomPanel = activeTab === 'simulation' && showBottomPanel && simulationViewMode === 'live';
+
     return (
         <div className="layout-root">
-            <Sidebar activeTab={activeTab} onTabChange={onTabChange} />
-            <div className="layout-main">
+            {showLeftPanel && <Sidebar activeTab={activeTab} onTabChange={onTabChange} />}
+            <div className={`layout-main ${showLayoutBottomPanel ? 'layout-main-with-bottom' : ''}`}>
                 <Header
                     modelName={modelName}
                     onNew={onNew}
@@ -47,15 +63,25 @@ export function Layout({
                     onLoadExample={onLoadExample}
                     onSave={onSave}
                     onExport={onExport}
-                    onValidate={onValidate}
-                    onCompareScenarios={onCompareScenarios}
-                    onCompareCloud={onCompareCloud}
+                    onToggleLeftPanel={onToggleLeftPanel}
+                    showLeftPanel={showLeftPanel}
                     onTogglePanel={onTogglePanel}
                     showPanel={showPanel}
+                    onToggleBottomPanel={onToggleBottomPanel}
+                    showBottomPanel={showBottomPanel}
                 />
                 <main className="content-area">
                     {children}
                 </main>
+                {showLayoutBottomPanel && (
+                    <div className="layout-bottom-panel-wrapper">
+                        <SimulationBottomPanel
+                            elapsedSec={simulationResult?.elapsedSec ?? 0}
+                            serviceMetrics={simulationResult?.serviceMetrics ?? []}
+                            constraintResults={simulationResult?.constraintResults ?? []}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

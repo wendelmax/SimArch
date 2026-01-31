@@ -83,7 +83,9 @@ function AppInner() {
   const [selectedZoneForMultiCloud, setSelectedZoneForMultiCloud] = useState<CloudProvider | null>('aws')
   const [showCompareCloud, setShowCompareCloud] = useState(false)
   const [showScenarioCompare, setShowScenarioCompare] = useState(false)
+  const [showLeftPanel, setShowLeftPanel] = useState(true)
   const [showRightPanel, setShowRightPanel] = useState(true)
+  const [showBottomPanel, setShowBottomPanel] = useState(true)
   const [rightPanelTab, setRightPanelTab] = useState<'finops' | 'perfil' | 'propriedades'>('propriedades')
   const [viewpoint, setViewpoint] = useState<ViewpointType>('all')
   const [traceabilityViewMode, setTraceabilityViewMode] = useState<TraceabilityViewMode>('matrix')
@@ -505,16 +507,6 @@ function AppInner() {
     })
   }, [getYaml])
 
-  const handleOpenMermaidLive = useCallback(() => {
-    const yaml = getYaml()
-    api.exportMermaid(yaml).then((res) => {
-      if (res.success && res.content) {
-        navigator.clipboard?.writeText(res.content).catch(() => {})
-        window.open('https://mermaid.live/edit', '_blank', 'noopener,noreferrer')
-      }
-    })
-  }, [getYaml])
-
   const handleValidateConflicts = useCallback(() => {
     const yaml = getYaml()
     api.validateConflicts(yaml).then((res) => {
@@ -610,11 +602,14 @@ function AppInner() {
         onLoadExample={handleLoadYaml}
         onSave={handleSaveYaml}
         onExport={handleExport}
-        onValidate={handleValidateConflicts}
-        onCompareScenarios={() => setShowScenarioCompare(true)}
-        onCompareCloud={() => setShowCompareCloud(true)}
+        onToggleLeftPanel={() => setShowLeftPanel((v) => !v)}
+        showLeftPanel={showLeftPanel}
         onTogglePanel={() => setShowRightPanel((v) => !v)}
         showPanel={showRightPanel}
+        onToggleBottomPanel={() => setShowBottomPanel((v) => !v)}
+        showBottomPanel={showBottomPanel}
+        simulationResult={dashboardData}
+        simulationViewMode={simulationViewMode}
       >
         {activeMainTab === 'architecture' && (
           <CanvasFrame
@@ -653,6 +648,24 @@ function AppInner() {
             />
             {showRightPanel && (
               <div className="right-panel right-panel-architecture">
+                <div className="right-panel-actions-row">
+                  <button
+                    type="button"
+                    className="toolbar-btn right-panel-action-btn"
+                    onClick={handleValidateConflicts}
+                    title="Validar conflitos entre constraints"
+                  >
+                    Validar conflitos
+                  </button>
+                  <button
+                    type="button"
+                    className="toolbar-btn right-panel-action-btn"
+                    onClick={() => setShowCompareCloud(true)}
+                    title="Comparar arquitetura em outra nuvem"
+                  >
+                    Outra nuvem
+                  </button>
+                </div>
                 <div className="right-panel-tabs">
                   <button
                     type="button"
@@ -737,7 +750,6 @@ function AppInner() {
               <div className="right-panel right-panel-flows">
                 <FlowsRightPanel
                   onExportMermaid={handleExportMermaid}
-                  onOpenMermaidLive={handleOpenMermaidLive}
                 />
               </div>
             )}
@@ -804,6 +816,7 @@ function AppInner() {
                   simulationOptions={simulationOptions}
                   onSimulationOptionsChange={(opts) => setSimulationOptions((prev) => ({ ...prev, ...opts }))}
                   onCompareScenarios={() => setShowScenarioCompare(true)}
+                  onCompareCloud={() => setShowCompareCloud(true)}
                 />
               </div>
             )}

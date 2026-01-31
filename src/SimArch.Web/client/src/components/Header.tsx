@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { EXAMPLE_PROJECTS } from '../data/exampleProjects'
+import { getExamplesByCloud, CLOUD_GROUP_LABELS, type ExampleCloudGroup } from '../data/exampleProjects'
 import {
     BsSave,
     BsFolder2Open,
@@ -7,11 +7,10 @@ import {
     BsChevronDown,
     BsDownload,
     BsCollection,
-    BsExclamationTriangle,
     BsGear,
+    BsLayoutSidebar,
     BsLayoutSidebarReverse,
-    BsPlayCircle,
-    BsCloudArrowUp
+    BsLayoutSplit
 } from 'react-icons/bs';
 
 interface HeaderProps {
@@ -21,11 +20,12 @@ interface HeaderProps {
     onLoadExample?: (yaml: string) => void;
     onSave: () => void;
     onExport: (type: string) => void;
-    onValidate: () => void;
-    onCompareScenarios?: () => void;
-    onCompareCloud?: () => void;
+    onToggleLeftPanel: () => void;
+    showLeftPanel: boolean;
     onTogglePanel: () => void;
     showPanel: boolean;
+    onToggleBottomPanel: () => void;
+    showBottomPanel: boolean;
 }
 
 export function Header({
@@ -35,11 +35,12 @@ export function Header({
     onLoadExample,
     onSave,
     onExport,
-    onValidate,
-    onCompareScenarios,
-    onCompareCloud,
+    onToggleLeftPanel,
+    showLeftPanel,
     onTogglePanel,
-    showPanel
+    showPanel,
+    onToggleBottomPanel,
+    showBottomPanel,
 }: HeaderProps) {
     const [exportOpen, setExportOpen] = useState(false);
     const [examplesOpen, setExamplesOpen] = useState(false);
@@ -72,12 +73,26 @@ export function Header({
                             >
                                 <BsCollection /> Exemplos <BsChevronDown className="chevron" />
                             </button>
-                            <div className={`dropdown-menu ${examplesOpen ? 'dropdown-menu-open' : ''}`}>
-                                {EXAMPLE_PROJECTS.map((ex) => (
-                                    <button key={ex.id} onClick={() => { onLoadExample(ex.yaml); setExamplesOpen(false); }} title={ex.description}>
-                                        {ex.name}
-                                    </button>
-                                ))}
+                            <div className={`dropdown-menu dropdown-menu-examples dropdown-menu-grouped ${examplesOpen ? 'dropdown-menu-open' : ''}`}>
+                                {(Object.keys(CLOUD_GROUP_LABELS) as ExampleCloudGroup[]).map((cloud) => {
+                                    const examples = getExamplesByCloud()[cloud]
+                                    if (!examples.length) return null
+                                    return (
+                                        <div key={cloud} className="dropdown-group">
+                                            <div className="dropdown-group-label">{CLOUD_GROUP_LABELS[cloud]}</div>
+                                            {examples.map((ex) => (
+                                                <button
+                                                    key={ex.id}
+                                                    type="button"
+                                                    onClick={() => { onLoadExample(ex.yaml); setExamplesOpen(false); }}
+                                                    title={ex.description}
+                                                >
+                                                    {ex.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
                     )}
@@ -86,20 +101,6 @@ export function Header({
             </div>
 
             <div className="header-right">
-<button onClick={onValidate} className="btn-secondary" title="Validate Conflicts">
-                        <BsExclamationTriangle /> <span className="btn-label">Validate</span>
-                    </button>
-                    {onCompareScenarios && (
-                        <button onClick={onCompareScenarios} className="btn-secondary" title="Comparar cenarios A vs B">
-                            <BsPlayCircle /> <span className="btn-label">Comparar cenarios</span>
-                        </button>
-                    )}
-                    {onCompareCloud && (
-                        <button onClick={onCompareCloud} className="btn-secondary" title="Comparar em outra nuvem">
-                            <BsCloudArrowUp /> <span className="btn-label">Outra nuvem</span>
-                        </button>
-                    )}
-
                 <div className="dropdown" ref={exportRef}>
                     <button
                         className="btn-secondary"
@@ -120,8 +121,14 @@ export function Header({
                     </div>
                 </div>
 
-                <button className="btn-icon" onClick={onTogglePanel} title={showPanel ? 'Hide Panel' : 'Show Panel'} style={{ color: showPanel ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
+                <button type="button" className="btn-icon" onClick={onToggleLeftPanel} title={showLeftPanel ? 'Ocultar painel esquerdo' : 'Mostrar painel esquerdo'} style={{ color: showLeftPanel ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
+                    <BsLayoutSidebar />
+                </button>
+                <button type="button" className="btn-icon" onClick={onTogglePanel} title={showPanel ? 'Ocultar painel direito' : 'Mostrar painel direito'} style={{ color: showPanel ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
                     <BsLayoutSidebarReverse />
+                </button>
+                <button type="button" className="btn-icon" onClick={onToggleBottomPanel} title={showBottomPanel ? 'Ocultar painel inferior' : 'Mostrar painel inferior'} style={{ color: showBottomPanel ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
+                    <BsLayoutSplit />
                 </button>
                 <button className="btn-icon" title="Configuracoes (em breve)"><BsGear /></button>
             </div>

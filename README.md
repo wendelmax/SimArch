@@ -6,13 +6,23 @@ SimArch e uma ferramenta de modelagem e simulacao arquitetural que permite desen
 
 ## Funcionalidades
 
+### Modelagem
 - **Diagrama de arquitetura** – Canvas visual com componentes cloud (AWS, Azure, GCP, Oracle, generico)
-- **Triggers** – User Traffic, Scheduler, Webhook, Event Source, Error
+- **Triggers** – User Traffic, Scheduler, Webhook, Event Source, Error (disponiveis em todas as nuvens)
 - **Fluxos** – Definicao de passos com fallback e injecao de falha
 - **Requisitos e rastreabilidade** – Matriz de rastreabilidade, gap analysis
 - **ADRs** – Architectural Decision Records
-- **Simulacao** – Engine de eventos discretos com circuit breaker, timeout, retry, bulkhead, queue
-- **Controles de simulacao** – Duracao, taxa, ramp-up, taxa de falha, cenarios prontos (Normal, Pico, Black Friday, Falha Regional)
+- **FinOps** – Custos por hora/mes por servico, visualizacao consolidada
+
+### Simulacao
+- **Engine** – Eventos discretos com circuit breaker, timeout, retry, bulkhead, queue
+- **Controles** – Duracao, taxa, ramp-up, taxa de falha
+- **Cenarios prontos** – Normal, Pico, Black Friday, Falha Regional
+- **Comparacao** – Cenarios A vs B, simulacao em outra nuvem
+
+### Interface
+- **Paineis retráteis** – Esquerdo (navegacao), direito (propriedades/controles), inferior (timeline/log)
+- **Validacao de conflitos** – Checa constraints arquiteturais
 - **Export** – PDF (ADR, relatorio, consolidado, decision log), JSON, Mermaid, FinOps CSV
 
 ## Requisitos
@@ -81,25 +91,42 @@ SimArch/
 │   ├── SimArch.Decision/     # Motor de decisao arquitetural
 │   ├── SimArch.Export/       # Export ADR, Mermaid, consolidado, etc.
 │   └── SimArch.App/          # Aplicacao standalone
-├── samples/                  # Projetos exemplo YAML
-│   ├── ecommerce-order-payment.yaml
-│   ├── checkout-flow.yaml
-│   └── checkout-with-requirements.yaml
-├── docs/                     # Documentacao
+├── samples/                  # Projetos exemplo YAML (arquivos avulsos)
+├── docs/
+│   ├── BACKEND-RESPONSABILIDADES.md
+│   └── MODULAR-MONOLITH.md
 └── docker-compose.yml
 ```
 
 ## Projetos exemplo
 
-Use **Exemplos** no menu para carregar:
+Use **Exemplos** no menu para carregar (agrupados por nuvem):
 
-- **E-commerce Order e Pagamento** – Fluxo completo com User Traffic, API Gateway, Auth, Order, Payment, Message Queue, Fallback e Error
-- **Checkout Flow** – Fluxo simples (User, Gateway, Payment, Wallet)
-- **Checkout com Requisitos** – Mesmo fluxo com requisitos e rastreabilidade
+### Generico
+- **E-commerce Order e Pagamento** – Fluxo completo com custos, triggers, fallbacks, rastreabilidade e ADRs
+- **Pipeline Event-Driven** – Scheduler, Webhook, Event Bus com cenarios assincronos
+- **Checkout Simples** – Fluxo basico com custos e requisitos
+
+### AWS
+- **API Serverless** – Lambda, API Gateway, DynamoDB, S3 com custos e fluxos
+- **Event-Driven AWS** – EventBridge, SQS, SNS e Lambda
+
+### Azure
+- **App Enterprise** – Functions, App Service, Cosmos DB, Service Bus, Key Vault
+
+### GCP
+- **Data Pipeline** – Cloud Run, Pub/Sub, BigQuery com fluxos de ingestao e analise
+
+### Oracle
+- **Enterprise** – OKE, Autonomous DB, Streaming, Load Balancer
+
+### Multicloud
+- **DR Multicloud (AWS + Azure + GCP)** – Zonas por nuvem com failover e ADRs
+- **Geo-Distribuido** – Zonas AWS, Azure e GCP com trafego por regiao
 
 ## Modelo YAML
 
-Exemplo minimo:
+Exemplo com custos:
 
 ```yaml
 name: Meu Sistema
@@ -110,13 +137,24 @@ services:
     name: API Gateway
     component: generic-api-gateway
     slaMs: 100
+    costPerHour: 0.05
+    costPerMonth: 36
+    currency: USD
   - id: payment
     name: Payment Service
     component: generic-service
+    slaMs: 200
     fallback: wallet
+    costPerHour: 0.12
+    costPerMonth: 87
+    currency: USD
   - id: wallet
     name: Wallet Fallback
     component: generic-service
+    slaMs: 500
+    costPerHour: 0.05
+    costPerMonth: 36
+    currency: USD
 flows:
   - id: main
     name: Main Flow
@@ -126,6 +164,16 @@ flows:
       - from: gateway
         to: payment
         onFailure: wallet
+requirements:
+  - id: REQ-001
+    text: Checkout em ate 500ms (P95)
+    priority: high
+    type: non-functional
+traceabilityLinks:
+  - requirementId: REQ-001
+    linkType: satisfy
+    elementType: service
+    elementId: gateway
 ```
 
 ## Licenca

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import mermaid from 'mermaid'
 import * as api from '../api/client'
 
@@ -73,19 +73,6 @@ export function FlowsView({ getYaml, onExportMermaid }: FlowsViewProps) {
       })
   }, [mermaidContent, viewMode])
 
-  const openMermaidLive = useCallback(() => {
-    if (!mermaidContent) return
-    const url = 'https://mermaid.live/edit'
-    window.open(url, '_blank', 'noopener,noreferrer')
-  }, [mermaidContent])
-
-  const copyCode = useCallback(() => {
-    if (!mermaidContent) return
-    navigator.clipboard?.writeText(mermaidContent).then(() => {
-      openMermaidLive()
-    }).catch(() => openMermaidLive())
-  }, [mermaidContent, openMermaidLive])
-
   return (
     <div className="canvas-view-single flows-view">
       <div className="flows-view-header">
@@ -109,11 +96,6 @@ export function FlowsView({ getYaml, onExportMermaid }: FlowsViewProps) {
               Codigo
             </button>
           </div>
-        )}
-        {mermaidContent && (
-          <button type="button" className="toolbar-btn secondary" onClick={copyCode} title="Copiar e abrir no Mermaid Live">
-            Abrir no Mermaid Live
-          </button>
         )}
       </div>
       {error && <p className="flows-view-message">{error}</p>}

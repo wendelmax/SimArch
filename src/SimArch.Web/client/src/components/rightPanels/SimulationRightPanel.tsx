@@ -11,7 +11,8 @@ interface SimulationRightPanelProps {
   onCostViewChange: (value: boolean) => void
   simulationOptions: SimulationScenarioOptions
   onSimulationOptionsChange: (opts: Partial<SimulationScenarioOptions>) => void
-  onCompareScenarios?: () => void
+  onCompareScenarios: () => void
+  onCompareCloud: () => void
 }
 
 export function SimulationRightPanel({
@@ -24,6 +25,7 @@ export function SimulationRightPanel({
   simulationOptions,
   onSimulationOptionsChange,
   onCompareScenarios,
+  onCompareCloud,
 }: SimulationRightPanelProps) {
   return (
     <div className="right-panel-content">
@@ -143,13 +145,17 @@ export function SimulationRightPanel({
           </label>
         </div>
       )}
-      {onCompareScenarios && (
-        <div className="right-panel-section">
-          <button type="button" className="toolbar-btn right-panel-btn" onClick={onCompareScenarios}>
+      <div className="right-panel-section">
+        <label className="right-panel-section-label">Comparacao</label>
+        <div className="right-panel-actions-inline">
+          <button type="button" className="toolbar-btn right-panel-btn" onClick={onCompareScenarios} title="Comparar cenarios A vs B">
             Comparar cenarios
           </button>
+          <button type="button" className="toolbar-btn right-panel-btn" onClick={onCompareCloud} title="Simular em outra nuvem">
+            Outra nuvem
+          </button>
         </div>
-      )}
+      </div>
       <div className="right-panel-section">
         <p className="right-panel-hint">
           Duracao: {simulationOptions.durationSec ?? 5}s | Rate: {simulationOptions.rate ?? 50}/s
