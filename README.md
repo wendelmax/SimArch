@@ -69,12 +69,27 @@ Interface em `http://localhost:5080`
 
 ## Docker
 
+### Imagens pre-construidas (GHCR)
+
 ```bash
-docker-compose up --build
+docker compose pull
+docker compose up -d
 ```
 
-- Gateway em `http://localhost:5000`
+- Gateway em `http://localhost` (porta 80)
 - Servicos: api, web, gateway
+
+Variaveis opcionais em `.env`:
+- `GHCR_IMAGE_BASE` – prefixo das imagens (default: ghcr.io/wendelmax/simarch)
+- `GATEWAY_HTTP_PORT` – porta do gateway (default: 80)
+- `CORS_ORIGINS` – origens permitidas (vazio = qualquer)
+- `RATE_LIMIT_PER_MINUTE` – limite de requisicoes/min nos endpoints de simulacao (default: 60)
+
+### Build local
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+```
 
 ## Estrutura do projeto
 

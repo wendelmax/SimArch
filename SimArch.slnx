@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/SimArch.Tests/SimArch.Tests.csproj" />
     <Project Path="src/SimArch.App/SimArch.App.csproj" />
     <Project Path="src/SimArch.Decision/SimArch.Decision.csproj" />
     <Project Path="src/SimArch.Domain/SimArch.Domain.csproj" />

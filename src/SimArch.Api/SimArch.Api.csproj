@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
     <ProjectReference Include="..\SimArch.Domain\SimArch.Domain.csproj" />
     <ProjectReference Include="..\SimArch.DSL\SimArch.DSL.csproj" />
     <ProjectReference Include="..\SimArch.Simulation\SimArch.Simulation.csproj" />

@@ -2,18 +2,51 @@ using SimArch.Decision;
 using SimArch.DSL;
 using SimArch.Export;
 using SimArch.Simulation;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog((ctx, lc) =>
+{
+    lc.ReadFrom.Configuration(ctx.Configuration);
+    if (ctx.HostingEnvironment.IsProduction())
+        lc.WriteTo.Console(new Serilog.Formatting.Compact.CompactJsonFormatter());
+    else
+        lc.WriteTo.Console();
+});
+
+var corsOrigins = builder.Configuration["CORS_ORIGINS"] ?? "";
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        policy.AllowAnyMethod().AllowAnyHeader();
+        if (string.IsNullOrWhiteSpace(corsOrigins))
+            policy.AllowAnyOrigin();
+        else
+            policy.WithOrigins(corsOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+    });
+});
+
+var rateLimit = int.TryParse(builder.Configuration["RATE_LIMIT_PER_MINUTE"], out var r) ? r : 60;
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("api", opt =>
+    {
+        opt.PermitLimit = rateLimit;
+        opt.Window = TimeSpan.FromMinutes(1);
     });
 });
 
 var app = builder.Build();
+app.UseSerilogRequestLogging();
 app.UseCors();
+app.UseRateLimiter();
+
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" })).AllowAnonymous();
 
 var loader = new YamlModelLoader();
 var simulation = new DiscreteEventSimulationEngine();
@@ -75,7 +108,7 @@ app.MapPost("/api/simulation/run", (SimulationRequest req) =>
         }),
         eventsCount = result.Events.Count
     });
-});
+}).RequireRateLimiting("api");
 
 app.MapPost("/api/decision/evaluate", (DecisionRequest req) =>
 {
@@ -280,7 +313,7 @@ app.MapPost("/api/simulation/compare", (SimulationCompareRequest req) =>
         scenarioB = new { elapsed = resultB.Elapsed.TotalSeconds, serviceMetrics = resultB.ServiceMetrics.Values.Select(m => new { m.ServiceId, m.RequestCount, m.FailureCount, m.AvgLatencyMs, m.P95LatencyMs }) },
         comparison
     });
-});
+}).RequireRateLimiting("api");
 
 app.MapPost("/api/export/consolidated", (ConsolidatedExportRequest req) =>
 {
@@ -308,9 +341,7 @@ app.MapPost("/api/export/consolidated", (ConsolidatedExportRequest req) =>
             content += "| " + c.ConstraintId + " | " + c.Metric + " | " + c.Operator + " | " + c.ExpectedValue.ToString(System.Globalization.CultureInfo.InvariantCulture) + " | " + (c.ActualValue.HasValue ? c.ActualValue.Value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) : "-") + " | " + (c.Passed ? "PASS" : "FAIL") + " |\n";
     }
     return Results.Json(new { success = true, content });
-});
-
-app.MapGet("/api/health", () => Results.Json(new { status = "ok" }));
+}).RequireRateLimiting("api");
 
 app.Run();
 
