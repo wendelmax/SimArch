@@ -21,6 +21,7 @@ import { ProjectInfoCard } from './components/ProjectInfoCard'
 import { CanvasFrame, type LinkedFromInfo } from './components/CanvasFrame'
 import { FinOpsSummary } from './components/FinOpsSummary'
 import { QualityProfilePanel } from './components/QualityProfilePanel'
+import { ConstraintsPanel } from './components/ConstraintsPanel'
 import { ProjectSetupModal, type ProjectType } from './components/ProjectSetupModal'
 import { CompareCloudModal } from './components/CompareCloudModal'
 import { ScenarioCompareModal } from './components/ScenarioCompareModal'
@@ -86,7 +87,7 @@ function AppInner() {
   const [showLeftPanel, setShowLeftPanel] = useState(true)
   const [showRightPanel, setShowRightPanel] = useState(true)
   const [showBottomPanel, setShowBottomPanel] = useState(true)
-  const [rightPanelTab, setRightPanelTab] = useState<'finops' | 'perfil' | 'propriedades'>('propriedades')
+  const [rightPanelTab, setRightPanelTab] = useState<'finops' | 'perfil' | 'propriedades' | 'constraints'>('propriedades')
   const [viewpoint, setViewpoint] = useState<ViewpointType>('all')
   const [traceabilityViewMode, setTraceabilityViewMode] = useState<TraceabilityViewMode>('matrix')
 
@@ -343,43 +344,43 @@ function AppInner() {
             }))
           )
           setConstraints(
-            (res.model.constraints ?? []).map((c: { id: string; metric: string; operator: string; value: number }) => ({
+            (res.model.constraints ?? []).map((c: { id: string; metric: string; operator: string; value: number; adrId?: string }) => ({
               id: c.id,
               metric: c.metric,
               operator: c.operator ?? 'lt',
               value: c.value,
+              adrId: c.adrId,
             }))
           )
+          const validStatuses: AdrDef['status'][] = ['Draft', 'Proposed', 'UnderReview', 'Accepted', 'Rejected', 'Implemented', 'Superseded', 'Deprecated']
+          const normStatus = (s: string): AdrDef['status'] => (validStatuses.includes(s as AdrDef['status']) ? (s as AdrDef['status']) : 'Draft')
           setAdrs(
             (res.model.adrs ?? []).map(
-              (a: {
-                id: string
-                number: number
-                title: string
-                status: string
-                date?: string
-                owner?: string
-                stakeholders?: string[]
-                context: string
-                decision: string
-                consequences: string
-                alternativesConsidered?: string
-                references?: string
-                supersededBy?: string
-              }) => ({
-                id: a.id,
-                number: a.number ?? 0,
-                title: a.title ?? '',
-                status: (a.status ?? 'Proposed') as AdrDef['status'],
-                date: a.date,
-                owner: a.owner,
-                stakeholders: a.stakeholders ?? [],
-                context: a.context ?? '',
-                decision: a.decision ?? '',
-                consequences: a.consequences ?? '',
-                alternativesConsidered: a.alternativesConsidered,
-                references: a.references,
-                supersededBy: a.supersededBy,
+              (a: Record<string, unknown>) => ({
+                id: (a.id as string) ?? '',
+                number: (a.number as number) ?? 0,
+                title: (a.title as string) ?? '',
+                slug: a.slug as string | undefined,
+                template: (a.template as AdrDef['template']) ?? 'simarch',
+                status: normStatus((a.status as string) ?? 'Draft'),
+                date: a.date as string | undefined,
+                owner: a.owner as string | undefined,
+                stakeholders: (a.stakeholders as string[]) ?? [],
+                proposedBy: a.proposedBy as string | undefined,
+                reviewedBy: a.reviewedBy as string | undefined,
+                approvedBy: a.approvedBy as string | undefined,
+                targetDate: a.targetDate as string | undefined,
+                reviewDate: a.reviewDate as string | undefined,
+                context: (a.context as string) ?? '',
+                decision: (a.decision as string) ?? '',
+                consequences: (a.consequences as string) ?? '',
+                alternativesConsidered: a.alternativesConsidered as string | undefined,
+                options: a.options as AdrDef['options'],
+                references: a.references as string | undefined,
+                supersededBy: a.supersededBy as string | undefined,
+                amendments: a.amendments as AdrDef['amendments'],
+                linkedConstraintIds: a.linkedConstraintIds as string[] | undefined,
+                appliesTo: a.appliesTo as AdrDef['appliesTo'],
               })
             )
           )
@@ -688,10 +689,18 @@ function AppInner() {
                   >
                     Propriedades
                   </button>
+                  <button
+                    type="button"
+                    className={`right-panel-tab ${rightPanelTab === 'constraints' ? 'active' : ''}`}
+                    onClick={() => setRightPanelTab('constraints')}
+                  >
+                    Constraints
+                  </button>
                 </div>
                 {rightPanelTab === 'finops' && <FinOpsSummary nodes={nodes} />}
                 {rightPanelTab === 'perfil' && <QualityProfilePanel getYaml={getYaml} onError={(msg: string) => alert(msg)} />}
                 {rightPanelTab === 'propriedades' && <PropertyPanel selectedNode={selectedNode as Node<NodeData> | null} onUpdate={onUpdateNode} />}
+                {rightPanelTab === 'constraints' && <ConstraintsPanel constraints={constraints} onConstraintsChange={setConstraints} adrs={adrs} onAdrsChange={setAdrs} />}
               </div>
             )}
           </CanvasFrame>
@@ -724,6 +733,7 @@ function AppInner() {
               <TraceabilityContent
                 requirements={requirements}
                 traceabilityLinks={traceabilityLinks}
+                adrs={adrs}
                 onSelectElement={handleSelectElement}
                 viewMode={traceabilityViewMode}
                 onViewModeChange={setTraceabilityViewMode}
@@ -772,6 +782,10 @@ function AppInner() {
                 adrs={adrs}
                 onAdrsChange={setAdrs}
                 onExportDecisionLog={handleExportDecisionLog}
+                serviceIds={elementIds}
+                flowIds={['main']}
+                constraints={constraints}
+                onConstraintsChange={setConstraints}
               />
             </div>
             {showRightPanel && (

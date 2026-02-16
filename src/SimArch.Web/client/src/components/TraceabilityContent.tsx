@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { TraceabilityMatrixPanel } from './TraceabilityMatrixPanel'
 import { TraceabilityGraphView } from './TraceabilityGraphView'
-import type { RequirementDef, TraceabilityLinkDef } from '../utils/diagramToYaml'
+import type { RequirementDef, TraceabilityLinkDef, AdrDef } from '../utils/diagramToYaml'
 
 export type TraceabilityViewMode = 'matrix' | 'graph'
 
 interface TraceabilityContentProps {
   requirements: RequirementDef[]
   traceabilityLinks: TraceabilityLinkDef[]
+  adrs?: AdrDef[]
   onSelectElement?: (elementId: string) => void
   viewMode?: TraceabilityViewMode
   onViewModeChange?: (mode: TraceabilityViewMode) => void
@@ -16,6 +17,7 @@ interface TraceabilityContentProps {
 export function TraceabilityContent({
   requirements,
   traceabilityLinks,
+  adrs = [],
   onSelectElement,
   viewMode: viewModeProp,
   onViewModeChange,
@@ -53,6 +55,7 @@ export function TraceabilityContent({
           <TraceabilityMatrixPanel
             requirements={requirements}
             traceabilityLinks={traceabilityLinks}
+            adrs={adrs}
             onSelectElement={onSelectElement}
           />
         )}

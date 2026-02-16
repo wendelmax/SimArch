@@ -1635,6 +1635,81 @@
   margin: 0;
 }
 
+.adr-section {
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.adr-section-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.constraints-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.constraints-panel-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 var(--space-sm);
+}
+
+.constraints-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.constraint-card {
+  padding: var(--space-sm);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.constraint-card-header {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.constraint-id {
+  font-weight: 600;
+}
+
+.constraint-adr {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.constraint-rule {
+  margin: var(--space-xs) 0;
+  font-size: 0.9rem;
+}
+
+.constraint-card-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.constraints-empty {
+  padding: 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.traceability-adr-title {
+  margin-top: var(--space-lg);
+}
+
 .flows-view {
   display: flex;
   flex-direction: column;

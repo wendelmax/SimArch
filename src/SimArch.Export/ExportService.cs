@@ -193,6 +193,20 @@ public sealed class ExportService : IExportService
                     sb.AppendLine("- **" + r.Id + "** " + EscapeMd(r.Text));
             }
         }
+        var adrsWithApplies = model.Adrs.Where(a => a.AppliesTo.Count > 0).ToList();
+        if (adrsWithApplies.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("## ADR -> Elementos");
+            sb.AppendLine();
+            sb.AppendLine("| ADR | Titulo | Tipo | Elemento |");
+            sb.AppendLine("|-----|--------|------|----------|");
+            foreach (var a in adrsWithApplies)
+            {
+                foreach (var t in a.AppliesTo)
+                    sb.AppendLine("| ADR " + a.Number.ToString("000", System.Globalization.CultureInfo.InvariantCulture) + " | " + EscapeMd(a.Title) + " | " + t.ElementType + " | " + t.ElementId + " |");
+            }
+        }
         return sb.ToString();
     }
 
@@ -288,10 +302,10 @@ public sealed class ExportService : IExportService
             sb.AppendLine("Nenhuma constraint definida.");
         else
         {
-            sb.AppendLine("| Id | Metric | Operator | Value |");
-            sb.AppendLine("|----|--------|----------|-------|");
+            sb.AppendLine("| Id | Metric | Operator | Value | ADR |");
+            sb.AppendLine("|----|--------|----------|-------|-----|");
             foreach (var c in model.Constraints)
-                sb.AppendLine("| " + c.Id + " | " + EscapeMd(c.Metric) + " | " + c.Operator + " | " + c.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) + " |");
+                sb.AppendLine("| " + c.Id + " | " + EscapeMd(c.Metric) + " | " + c.Operator + " | " + c.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) + " | " + EscapeMd(c.AdrId ?? "-") + " |");
         }
         return sb.ToString();
     }
@@ -345,19 +359,32 @@ public sealed class ExportService : IExportService
     private static string ExportDecisionLogBody(ArchitectureModel model)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Registro de decisões arquiteturais (ADR). Status: Proposed | Accepted | Rejected | Superseded.");
+        sb.AppendLine("Registro de decisões arquiteturais (ADR). Status: Draft | Proposed | UnderReview | Accepted | Rejected | Implemented | Superseded | Deprecated.");
         sb.AppendLine();
         foreach (var a in model.Adrs.OrderBy(x => x.Number))
         {
             sb.AppendLine("---");
             sb.AppendLine();
             sb.AppendLine("## ADR " + a.Number.ToString("000", System.Globalization.CultureInfo.InvariantCulture) + " - " + EscapeMd(a.Title));
+            if (!string.IsNullOrEmpty(a.Slug))
+                sb.AppendLine("Slug: `" + EscapeMd(a.Slug) + "`");
             sb.AppendLine();
             sb.AppendLine("| Campo | Valor |");
             sb.AppendLine("|------|-------|");
             sb.AppendLine("| **Status** | " + EscapeMd(a.Status) + " |");
+            sb.AppendLine("| **Template** | " + EscapeMd(a.Template ?? "simarch") + " |");
             sb.AppendLine("| **Data** | " + EscapeMd(a.Date ?? "-") + " |");
             sb.AppendLine("| **Responsável** | " + EscapeMd(a.Owner ?? "-") + " |");
+            if (!string.IsNullOrEmpty(a.ProposedBy))
+                sb.AppendLine("| **Proposto por** | " + EscapeMd(a.ProposedBy) + " |");
+            if (!string.IsNullOrEmpty(a.ReviewedBy))
+                sb.AppendLine("| **Revisado por** | " + EscapeMd(a.ReviewedBy) + " |");
+            if (!string.IsNullOrEmpty(a.ApprovedBy))
+                sb.AppendLine("| **Aprovado por** | " + EscapeMd(a.ApprovedBy) + " |");
+            if (!string.IsNullOrEmpty(a.TargetDate))
+                sb.AppendLine("| **Data alvo** | " + EscapeMd(a.TargetDate) + " |");
+            if (!string.IsNullOrEmpty(a.ReviewDate))
+                sb.AppendLine("| **Data revisão** | " + EscapeMd(a.ReviewDate) + " |");
             if (a.Stakeholders.Count > 0)
                 sb.AppendLine("| **Stakeholders** | " + EscapeMd(string.Join(", ", a.Stakeholders)) + " |");
             if (!string.IsNullOrEmpty(a.SupersededBy))
@@ -387,6 +414,51 @@ public sealed class ExportService : IExportService
                 sb.AppendLine("### References");
                 sb.AppendLine();
                 sb.AppendLine(a.References);
+            }
+            if (a.Amendments.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("### Amendments");
+                sb.AppendLine();
+                foreach (var m in a.Amendments)
+                {
+                    sb.AppendLine("- **" + EscapeMd(m.Date) + "**: " + EscapeMd(m.Text));
+                }
+            }
+            if (a.AppliesTo.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("### Applies To");
+                sb.AppendLine();
+                foreach (var t in a.AppliesTo)
+                    sb.AppendLine("- " + t.ElementType + ": " + t.ElementId);
+            }
+            if (a.LinkedConstraintIds.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("### Fitness Functions (Constraints)");
+                sb.AppendLine();
+                foreach (var cid in a.LinkedConstraintIds)
+                    sb.AppendLine("- " + cid);
+            }
+            if (a.Options.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("### Options");
+                sb.AppendLine();
+                foreach (var o in a.Options)
+                {
+                    sb.AppendLine("**" + EscapeMd(o.Option) + "**");
+                    if (o.Pros.Count > 0)
+                    {
+                        sb.AppendLine("- Pros: " + string.Join("; ", o.Pros));
+                    }
+                    if (o.Cons.Count > 0)
+                    {
+                        sb.AppendLine("- Cons: " + string.Join("; ", o.Cons));
+                    }
+                    sb.AppendLine();
+                }
             }
             sb.AppendLine();
         }

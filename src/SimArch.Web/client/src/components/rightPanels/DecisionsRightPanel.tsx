@@ -5,10 +5,13 @@ interface DecisionsRightPanelProps {
   onExportDecisionLog?: () => void
 }
 
+const ALL_STATUSES = ['Draft', 'Proposed', 'UnderReview', 'Accepted', 'Rejected', 'Implemented', 'Superseded', 'Deprecated'] as const
+
 export function DecisionsRightPanel({ adrs, onExportDecisionLog }: DecisionsRightPanelProps) {
-  const byStatus = { Proposed: 0, Accepted: 0, Rejected: 0, Superseded: 0 }
+  const byStatus: Record<string, number> = {}
+  ALL_STATUSES.forEach((s) => { byStatus[s] = 0 })
   adrs.forEach((a) => {
-    if (a.status in byStatus) (byStatus as Record<string, number>)[a.status]++
+    if (a.status in byStatus) byStatus[a.status]++
   })
 
   return (
@@ -27,22 +30,12 @@ export function DecisionsRightPanel({ adrs, onExportDecisionLog }: DecisionsRigh
           <span className="right-panel-stat-label">Total ADRs</span>
           <span className="right-panel-stat-value">{adrs.length}</span>
         </div>
-        <div className="right-panel-stat-row">
-          <span className="right-panel-stat-label">Propostos</span>
-          <span className="right-panel-stat-value">{byStatus.Proposed}</span>
-        </div>
-        <div className="right-panel-stat-row">
-          <span className="right-panel-stat-label">Aceitos</span>
-          <span className="right-panel-stat-value">{byStatus.Accepted}</span>
-        </div>
-        <div className="right-panel-stat-row">
-          <span className="right-panel-stat-label">Rejeitados</span>
-          <span className="right-panel-stat-value">{byStatus.Rejected}</span>
-        </div>
-        <div className="right-panel-stat-row">
-          <span className="right-panel-stat-label">Substituidos</span>
-          <span className="right-panel-stat-value">{byStatus.Superseded}</span>
-        </div>
+        {ALL_STATUSES.map((s) => (
+          <div key={s} className="right-panel-stat-row">
+            <span className="right-panel-stat-label">{s}</span>
+            <span className="right-panel-stat-value">{byStatus[s] ?? 0}</span>
+          </div>
+        ))}
       </div>
       <div className="right-panel-section">
         <p className="right-panel-hint">

@@ -41,24 +41,52 @@ export interface ParametricConstraintDef {
   metric: string
   operator: string
   value: number
+  adrId?: string
 }
 
-export type AdrStatus = 'Proposed' | 'Accepted' | 'Rejected' | 'Superseded'
+export type AdrStatus = 'Draft' | 'Proposed' | 'UnderReview' | 'Accepted' | 'Rejected' | 'Implemented' | 'Superseded' | 'Deprecated'
+
+export interface AdrOptionDef {
+  option: string
+  pros: string[]
+  cons: string[]
+}
+
+export interface AdrAmendmentDef {
+  date: string
+  text: string
+}
+
+export interface AdrAppliesToDef {
+  elementType: string
+  elementId: string
+}
 
 export interface AdrDef {
   id: string
   number: number
   title: string
+  slug?: string
+  template?: 'simarch' | 'nygard' | 'madr' | 'business'
   status: AdrStatus
   date?: string
   owner?: string
   stakeholders?: string[]
+  proposedBy?: string
+  reviewedBy?: string
+  approvedBy?: string
+  targetDate?: string
+  reviewDate?: string
   context: string
   decision: string
   consequences: string
   alternativesConsidered?: string
+  options?: AdrOptionDef[]
   references?: string
   supersededBy?: string
+  amendments?: AdrAmendmentDef[]
+  linkedConstraintIds?: string[]
+  appliesTo?: AdrAppliesToDef[]
 }
 
 export type ProjectType = 'single' | 'multicloud'
@@ -154,8 +182,23 @@ export function diagramToYaml(
     constraintsBlock =
       '\nconstraints:\n' +
       options.constraints
-        .map((c) => `  - id: ${c.id}\n    metric: ${c.metric}\n    operator: ${c.operator}\n    value: ${c.value}`)
+        .map(
+          (c) =>
+            `  - id: ${c.id}\n    metric: ${c.metric}\n    operator: ${c.operator}\n    value: ${c.value}` +
+            (c.adrId ? `\n    adrId: ${escapeYamlString(c.adrId)}` : '')
+        )
         .join('\n')
+  }
+
+  function slugify(s: string): string {
+    if (!s?.trim()) return 'untitled'
+    return s
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
   }
 
   let adrsBlock = ''
@@ -164,15 +207,37 @@ export function diagramToYaml(
       '\nadrs:\n' +
       options.adrs
         .map((a) => {
+          const slug = a.slug ?? slugify(a.title)
           let block =
-            `  - id: ${escapeYamlString(a.id)}\n    number: ${a.number}\n    title: ${escapeYamlString(a.title)}\n    status: ${a.status}\n    context: ${escapeYamlString(a.context)}\n    decision: ${escapeYamlString(a.decision)}\n    consequences: ${escapeYamlString(a.consequences)}`
+            `  - id: ${escapeYamlString(a.id)}\n    number: ${a.number}\n    title: ${escapeYamlString(a.title)}\n    slug: ${escapeYamlString(slug)}\n    template: ${a.template ?? 'simarch'}\n    status: ${a.status}\n    context: ${escapeYamlString(a.context)}\n    decision: ${escapeYamlString(a.decision)}\n    consequences: ${escapeYamlString(a.consequences)}`
           if (a.date) block += `\n    date: ${escapeYamlString(a.date)}`
           if (a.owner) block += `\n    owner: ${escapeYamlString(a.owner)}`
           if (a.stakeholders && a.stakeholders.length > 0)
             block += `\n    stakeholders:\n${a.stakeholders.map((s) => `      - ${escapeYamlString(s)}`).join('\n')}`
+          if (a.proposedBy) block += `\n    proposedBy: ${escapeYamlString(a.proposedBy)}`
+          if (a.reviewedBy) block += `\n    reviewedBy: ${escapeYamlString(a.reviewedBy)}`
+          if (a.approvedBy) block += `\n    approvedBy: ${escapeYamlString(a.approvedBy)}`
+          if (a.targetDate) block += `\n    targetDate: ${escapeYamlString(a.targetDate)}`
+          if (a.reviewDate) block += `\n    reviewDate: ${escapeYamlString(a.reviewDate)}`
           if (a.alternativesConsidered) block += `\n    alternativesConsidered: ${escapeYamlString(a.alternativesConsidered)}`
+          if (a.options && a.options.length > 0)
+            block +=
+              '\n    options:\n' +
+              a.options
+                .map((o) => {
+                  const pros = (o.pros ?? []).length > 0 ? (o.pros ?? []).map((p) => `          - ${escapeYamlString(p)}`).join('\n') : '          []'
+                  const cons = (o.cons ?? []).length > 0 ? (o.cons ?? []).map((c) => `          - ${escapeYamlString(c)}`).join('\n') : '          []'
+                  return `      - option: ${escapeYamlString(o.option)}\n        pros:\n${pros}\n        cons:\n${cons}`
+                })
+                .join('\n')
           if (a.references) block += `\n    references: ${escapeYamlString(a.references)}`
           if (a.supersededBy) block += `\n    supersededBy: ${escapeYamlString(a.supersededBy)}`
+          if (a.amendments && a.amendments.length > 0)
+            block += '\n    amendments:\n' + a.amendments.map((m) => `      - date: ${escapeYamlString(m.date)}\n        text: ${escapeYamlString(m.text)}`).join('\n')
+          if (a.linkedConstraintIds && a.linkedConstraintIds.length > 0)
+            block += `\n    linkedConstraintIds:\n${a.linkedConstraintIds.map((id) => `      - ${escapeYamlString(id)}`).join('\n')}`
+          if (a.appliesTo && a.appliesTo.length > 0)
+            block += '\n    appliesTo:\n' + a.appliesTo.map((t) => `      - elementType: ${t.elementType}\n        elementId: ${t.elementId}`).join('\n')
           return block
         })
         .join('\n')

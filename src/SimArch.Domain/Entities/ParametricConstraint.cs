@@ -6,4 +6,5 @@ public sealed class ParametricConstraint
     public string Metric { get; init; } = string.Empty;
     public string Operator { get; init; } = "lt";
     public double Value { get; init; }
+    public string? AdrId { get; init; }
 }

@@ -1,3 +1,5 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using SimArch.Decision;
 using SimArch.DSL;
 using SimArch.Export;
@@ -34,11 +36,15 @@ builder.Services.AddCors(options =>
 var rateLimit = int.TryParse(builder.Configuration["RATE_LIMIT_PER_MINUTE"], out var r) ? r : 60;
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddFixedWindowLimiter("api", opt =>
-    {
-        opt.PermitLimit = rateLimit;
-        opt.Window = TimeSpan.FromMinutes(1);
-    });
+    options.GlobalLimiter = PartitionedRateLimiter.Create<Microsoft.AspNetCore.Http.HttpContext, string>(ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = rateLimit,
+                Window = TimeSpan.FromMinutes(1),
+                AutoReplenishment = true,
+            }));
 });
 
 var app = builder.Build();
@@ -75,8 +81,8 @@ app.MapPost("/api/model/load", (LoadRequest req) =>
             Flows = model.Flows.Select(f => new { f.Id, f.Name, StepsCount = f.Steps.Count, Steps = f.Steps.Select(s => new { From = s.FromNodeId, To = s.ToNodeId, OnFailure = s.OnFailureTargetId }) }),
             Requirements = model.Requirements.Select(r => new { r.Id, r.Text, r.Priority, r.Type, r.StandardRef }),
             TraceabilityLinks = model.TraceabilityLinks.Select(t => new { t.RequirementId, t.LinkType, t.ElementType, t.ElementId }),
-            Constraints = model.Constraints.Select(c => new { c.Id, c.Metric, c.Operator, c.Value }),
-            Adrs = model.Adrs.Select(a => new { a.Id, a.Number, a.Title, a.Status, a.Date, a.Owner, Stakeholders = a.Stakeholders, a.Context, a.Decision, a.Consequences, a.AlternativesConsidered, a.References, a.SupersededBy })
+            Constraints = model.Constraints.Select(c => new { c.Id, c.Metric, c.Operator, c.Value, c.AdrId }),
+            Adrs = model.Adrs.Select(a => new { a.Id, a.Number, a.Title, a.Slug, a.Template, a.Status, a.Date, a.Owner, Stakeholders = a.Stakeholders, a.ProposedBy, a.ReviewedBy, a.ApprovedBy, a.TargetDate, a.ReviewDate, a.Context, a.Decision, a.Consequences, a.AlternativesConsidered, Options = a.Options.Select(o => new { o.Option, o.Pros, o.Cons }), a.References, a.SupersededBy, Amendments = a.Amendments.Select(m => new { m.Date, m.Text }), a.LinkedConstraintIds, AppliesTo = a.AppliesTo.Select(t => new { t.ElementType, t.ElementId }) })
         }
     });
 });

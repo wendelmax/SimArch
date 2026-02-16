@@ -129,7 +129,8 @@ var doc = deserializer.Deserialize<YamlDocument>(source);
                 Id = c.Id ?? Guid.NewGuid().ToString(),
                 Metric = c.Metric ?? "",
                 Operator = c.Operator ?? "lt",
-                Value = c.Value ?? 0
+                Value = c.Value ?? 0,
+                AdrId = c.AdrId
             }).ToList();
 
             var adrs = (doc.Adrs ?? new List<YamlAdr>()).Select((a, i) => new ArchitecturalDecisionRecord
@@ -137,16 +138,40 @@ var doc = deserializer.Deserialize<YamlDocument>(source);
                 Id = a.Id ?? ("adr-" + (i + 1)),
                 Number = a.Number ?? (i + 1),
                 Title = a.Title ?? "",
-                Status = a.Status ?? "Proposed",
+                Slug = a.Slug ?? Slugify(a.Title ?? ""),
+                Template = a.Template ?? "simarch",
+                Status = NormalizeAdrStatus(a.Status),
                 Date = a.Date,
                 Owner = a.Owner,
                 Stakeholders = (a.Stakeholders ?? new List<string>()).ToList(),
+                ProposedBy = a.ProposedBy,
+                ReviewedBy = a.ReviewedBy,
+                ApprovedBy = a.ApprovedBy,
+                TargetDate = a.TargetDate,
+                ReviewDate = a.ReviewDate,
                 Context = a.Context ?? "",
                 Decision = a.Decision ?? "",
                 Consequences = a.Consequences ?? "",
                 AlternativesConsidered = a.AlternativesConsidered,
+                Options = (a.Options ?? new List<YamlAdrOption>()).Select(o => new AdrOption
+                {
+                    Option = o.Option ?? "",
+                    Pros = o.Pros ?? new List<string>(),
+                    Cons = o.Cons ?? new List<string>()
+                }).ToList(),
                 References = a.References,
-                SupersededBy = a.SupersededBy
+                SupersededBy = a.SupersededBy,
+                Amendments = (a.Amendments ?? new List<YamlAdrAmendment>()).Select(m => new AdrAmendment
+                {
+                    Date = m.Date ?? "",
+                    Text = m.Text ?? ""
+                }).ToList(),
+                LinkedConstraintIds = a.LinkedConstraintIds ?? new List<string>(),
+                AppliesTo = (a.AppliesTo ?? new List<YamlAdrAppliesTo>()).Select(t => new AdrAppliesTo
+                {
+                    ElementType = t.ElementType ?? "service",
+                    ElementId = t.ElementId ?? ""
+                }).ToList()
             }).ToList();
 
             model = new ArchitectureModel
@@ -166,6 +191,25 @@ var doc = deserializer.Deserialize<YamlDocument>(source);
             error = ex.Message;
             return false;
         }
+    }
+
+    private static string Slugify(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return "untitled";
+        var lowered = s.ToLowerInvariant().Trim();
+        var chars = lowered.Where(c => char.IsLetterOrDigit(c) || c == '-' || c == ' ').ToArray();
+        return new string(chars).Replace(' ', '-').Trim('-');
+    }
+
+    private static string NormalizeAdrStatus(string? s)
+    {
+        var valid = new[] { "Draft", "Proposed", "UnderReview", "Accepted", "Rejected", "Implemented", "Superseded", "Deprecated" };
+        if (string.IsNullOrWhiteSpace(s)) return "Draft";
+        var normalized = s.Trim();
+        if (normalized == "Proposed") return "Proposed";
+        if (valid.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+            return valid.First(x => string.Equals(x, normalized, StringComparison.OrdinalIgnoreCase));
+        return "Draft";
     }
 
     private sealed class YamlDocument
@@ -189,16 +233,46 @@ var doc = deserializer.Deserialize<YamlDocument>(source);
         public string? Id { get; set; }
         public int? Number { get; set; }
         public string? Title { get; set; }
+        public string? Slug { get; set; }
+        public string? Template { get; set; }
         public string? Status { get; set; }
         public string? Date { get; set; }
         public string? Owner { get; set; }
         public List<string>? Stakeholders { get; set; }
+        public string? ProposedBy { get; set; }
+        public string? ReviewedBy { get; set; }
+        public string? ApprovedBy { get; set; }
+        public string? TargetDate { get; set; }
+        public string? ReviewDate { get; set; }
         public string? Context { get; set; }
         public string? Decision { get; set; }
         public string? Consequences { get; set; }
         public string? AlternativesConsidered { get; set; }
+        public List<YamlAdrOption>? Options { get; set; }
         public string? References { get; set; }
         public string? SupersededBy { get; set; }
+        public List<YamlAdrAmendment>? Amendments { get; set; }
+        public List<string>? LinkedConstraintIds { get; set; }
+        public List<YamlAdrAppliesTo>? AppliesTo { get; set; }
+    }
+
+    private sealed class YamlAdrOption
+    {
+        public string? Option { get; set; }
+        public List<string>? Pros { get; set; }
+        public List<string>? Cons { get; set; }
+    }
+
+    private sealed class YamlAdrAmendment
+    {
+        public string? Date { get; set; }
+        public string? Text { get; set; }
+    }
+
+    private sealed class YamlAdrAppliesTo
+    {
+        public string? ElementType { get; set; }
+        public string? ElementId { get; set; }
     }
 
     private sealed class YamlConstraint
@@ -207,6 +281,7 @@ var doc = deserializer.Deserialize<YamlDocument>(source);
         public string? Metric { get; set; }
         public string? Operator { get; set; }
         public double? Value { get; set; }
+        public string? AdrId { get; set; }
     }
 
     private sealed class YamlRequirement
