@@ -2,10 +2,12 @@ services:
   api:
     image: ${GHCR_IMAGE_BASE:-ghcr.io/wendelmax/simarch}-api:latest
     container_name: simarch-api
+    ports:
+      - "5000:5000"
     expose:
-      - "80"
+      - "5000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -15,10 +17,12 @@ services:
   web:
     image: ${GHCR_IMAGE_BASE:-ghcr.io/wendelmax/simarch}-web:latest
     container_name: simarch-web
+    ports:
+      - "5001:5001"
     expose:
-      - "80"
+      - "5001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s
       timeout: 5s
       retries: 3
