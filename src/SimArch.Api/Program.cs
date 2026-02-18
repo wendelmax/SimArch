@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.RateLimiting;
 using SimArch.Decision;
 using SimArch.DSL;
@@ -45,9 +46,32 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1),
                 AutoReplenishment = true,
             }));
+    options.AddPolicy("api", ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = rateLimit,
+                Window = TimeSpan.FromMinutes(1),
+                AutoReplenishment = true,
+            }));
 });
 
 var app = builder.Build();
+var isProduction = app.Environment.IsProduction();
+app.UseExceptionHandler(err =>
+{
+    err.Run(async ctx =>
+    {
+        ctx.Response.StatusCode = 500;
+        ctx.Response.ContentType = "application/json";
+        var ex = ctx.Features.Get<IExceptionHandlerFeature>()?.Error;
+        if (ex != null)
+            Serilog.Log.Error(ex, "Unhandled exception");
+        var msg = isProduction ? "An error occurred." : (ex?.Message ?? "An error occurred.");
+        await ctx.Response.WriteAsJsonAsync(new { success = false, error = msg });
+    });
+});
 app.UseSerilogRequestLogging();
 app.UseCors();
 app.UseRateLimiter();

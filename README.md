@@ -67,7 +67,7 @@ cd .. && dotnet run
 
 Interface em `http://localhost:5080`
 
-## Docker
+## Docker (producao)
 
 ### Imagens pre-construidas (GHCR)
 
@@ -76,19 +76,20 @@ docker compose pull
 docker compose up -d
 ```
 
-- Gateway em `http://localhost` (porta 80)
-- Servicos: api, web, gateway
+- **Web** em `http://localhost` (porta 80) ou `http://localhost:5001`; proxy `/api` para a API
+- **API** em `http://localhost:5000` (acesso direto)
 
-Variaveis opcionais em `.env`:
+Servicos: `api`, `web`. Em producao os containers rodam com `ASPNETCORE_ENVIRONMENT=Production`, healthchecks, rate limit e CORS configuráveis.
+
+Variaveis em `.env` (copie de `.env.example`):
 - `GHCR_IMAGE_BASE` – prefixo das imagens (default: ghcr.io/wendelmax/simarch)
-- `GATEWAY_HTTP_PORT` – porta do gateway (default: 80)
-- `CORS_ORIGINS` – origens permitidas (vazio = qualquer)
-- `RATE_LIMIT_PER_MINUTE` – limite de requisicoes/min nos endpoints de simulacao (default: 60)
+- `CORS_ORIGINS` – origens permitidas na API, separadas por virgula (default: localhost:80 e 5001)
+- `RATE_LIMIT_PER_MINUTE` – limite de requisicoes/min por IP (default: 120)
 
-### Build local
+### Build local das imagens
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+docker compose -f docker-compose.yml -f docker-compose.build.yml up --build -d
 ```
 
 ## Estrutura do projeto
@@ -99,7 +100,7 @@ SimArch/
 │   ├── SimArch.Api/          # API REST (modelo, simulacao, decisao, export)
 │   ├── SimArch.Web/          # Host ASP.NET + frontend React (wwwroot)
 │   │   └── client/           # React + Vite + ReactFlow + Mermaid
-│   ├── SimArch.Gateway/      # Gateway (Docker)
+│   ├── SimArch.Gateway/      # Gateway Ocelot (opcional; em Docker usa-se Web como proxy)
 │   ├── SimArch.Domain/       # Entidades e modelos
 │   ├── SimArch.DSL/          # YAML loader (YamlModelLoader)
 │   ├── SimArch.Simulation/   # Engine de simulacao discreta

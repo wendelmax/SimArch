@@ -2,6 +2,12 @@ services:
   api:
     image: ${GHCR_IMAGE_BASE:-ghcr.io/wendelmax/simarch}-api:latest
     container_name: simarch-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5000
+      HTTP_PORTS: "5000"
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80,http://localhost:5001}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-120}
     ports:
       - "5000:5000"
     expose:
@@ -18,6 +24,9 @@ services:
     image: ${GHCR_IMAGE_BASE:-ghcr.io/wendelmax/simarch}-web:latest
     container_name: simarch-web
     environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5001
+      HTTP_PORTS: "5001"
       ReverseProxy__Clusters__api__Destinations__destination1__Address: http://api:5000
     ports:
       - "5001:5001"

@@ -10,9 +10,3 @@ services:
       context: .
       dockerfile: src/SimArch.Web/Dockerfile
     image: ${GHCR_IMAGE_BASE:-ghcr.io/wendelmax/simarch}-web:local
-
-  gateway:
-    build:
-      context: .
-      dockerfile: src/SimArch.Gateway/Dockerfile
-    image: ${GHCR_IMAGE_BASE:-ghcr.io/wendelmax/simarch}-gateway:local
