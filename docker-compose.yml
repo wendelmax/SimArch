@@ -2,10 +2,12 @@ services:
   api:
     image: ${GHCR_IMAGE_BASE:-ghcr.io/wendelmax/simarch}-api:latest
     container_name: simarch-api
+    ports:
+      - "5000:5000"
     expose:
-      - "80"
+      - "5000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -15,30 +17,20 @@ services:
   web:
     image: ${GHCR_IMAGE_BASE:-ghcr.io/wendelmax/simarch}-web:latest
     container_name: simarch-web
-    expose:
-      - "80"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-
-  gateway:
-    image: ${GHCR_IMAGE_BASE:-ghcr.io/wendelmax/simarch}-gateway:latest
-    container_name: simarch-gateway
+    environment:
+      ReverseProxy__Clusters__api__Destinations__destination1__Address: http://api:5000
     ports:
-      - "${GATEWAY_HTTP_PORT:-80}:80"
+      - "5001:5001"
+      - "80:5001"
+    expose:
+      - "5001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
     depends_on:
       api:
-        condition: service_healthy
-      web:
         condition: service_healthy
     restart: unless-stopped
