@@ -57,7 +57,7 @@ export function AdrPanel({ adrs, onAdrsChange, onExportDecisionLog, serviceIds =
     }
     if (templateChoice === 'madr') base.options = [{ option: '', pros: [], cons: [] }]
     setNewAdr(base)
-  }, [adrs.length, templateChoice])
+  }, [adrs, templateChoice])
 
   const saveNewAdr = useCallback(() => {
     if (newAdr && newAdr.title.trim()) {

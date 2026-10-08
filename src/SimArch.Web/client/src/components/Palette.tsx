@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { cloudCatalog, providerLabels, providerColors, type CloudProvider, type CloudComponentDef } from '../data/cloudCatalog'
 import { ComponentIcon, ProviderIcon } from '../data/componentIcons'
 
@@ -36,16 +36,11 @@ interface PaletteProps {
 const ZONE_PROVIDERS: CloudProvider[] = ['aws', 'azure', 'gcp', 'oracle']
 
 export function Palette({ onDragStart, projectType = 'single', primaryCloud = 'generic', selectedZone = 'aws', onZoneChange }: PaletteProps) {
-  const [activeProvider, setActiveProvider] = useState<CloudProvider>(projectType === 'single' ? (primaryCloud ?? 'generic') : (selectedZone ?? 'aws'))
   const [categoryFilter, setCategoryFilter] = useState<string>('')
 
-  useEffect(() => {
-    setActiveProvider(projectType === 'single' ? (primaryCloud ?? 'generic') : (selectedZone ?? 'aws'))
-  }, [projectType, primaryCloud, selectedZone])
-
   const allowedProviders: CloudProvider[] = projectType === 'single' ? [primaryCloud ?? 'generic'] : ['generic', ...ZONE_PROVIDERS]
-  const effectiveProvider = projectType === 'single' ? (primaryCloud ?? 'generic') : (selectedZone ?? activeProvider)
-  const components = cloudCatalog[effectiveProvider] ?? []
+  const effectiveProvider = projectType === 'single' ? (primaryCloud ?? 'generic') : (selectedZone ?? 'aws')
+  const components = useMemo(() => cloudCatalog[effectiveProvider] ?? [], [effectiveProvider])
   const categories = useMemo(() => {
     const set = new Set(components.map((c) => c.category))
     return ['', ...CATEGORY_ORDER.filter((c) => set.has(c)), ...[...set].filter((c) => !CATEGORY_ORDER.includes(c))]
@@ -67,11 +62,11 @@ export function Palette({ onDragStart, projectType = 'single', primaryCloud = 'g
           <button
             key={p}
             type="button"
-            className={`palette-tab ${(projectType === 'multicloud' ? selectedZone === p : activeProvider === p) ? 'active' : ''}`}
-            style={{ borderBottomColor: (projectType === 'multicloud' ? selectedZone === p : activeProvider === p) ? providerColors[p] : 'transparent' }}
+            className={`palette-tab ${(projectType === 'multicloud' ? selectedZone === p : primaryCloud === p) ? 'active' : ''}`}
+            style={{ borderBottomColor: (projectType === 'multicloud' ? selectedZone === p : primaryCloud === p) ? providerColors[p] : 'transparent' }}
             onClick={() => {
               if (projectType === 'multicloud') onZoneChange?.(p)
-              else setActiveProvider(p)
+              else return
             }}
           >
             <span className="palette-tab-icon"><ProviderIcon provider={p} size={16} /></span>

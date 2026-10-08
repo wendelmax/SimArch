@@ -4,9 +4,6 @@ import {
   Background,
   Controls,
   MiniMap,
-  addEdge,
-  useNodesState,
-  useEdgesState,
   useReactFlow,
   type Node,
   type Edge,
@@ -31,7 +28,6 @@ function FlowPositionRef({ setScreenToFlow }: { setScreenToFlow: (fn: (p: { x: n
   }, [screenToFlowPosition, setScreenToFlow])
   return null
 }
-
 export type ViewpointType = 'all' | 'services' | 'flows' | 'requirements' | 'constraints'
 
 interface CanvasProps {
@@ -45,7 +41,6 @@ interface CanvasProps {
   projectType?: 'single' | 'multicloud'
   linkedElementIds?: string[]
 }
-
 export function Canvas({
   nodes,
   edges,
@@ -79,7 +74,6 @@ export function Canvas({
         const inLinked = linkedSet.has(n.id)
         return { ...n, style: { ...n.style, opacity: inLinked ? 1 : 0.35 } }
       })
-    } else if (viewpoint === 'constraints') {
     }
 
     return {
@@ -103,7 +97,7 @@ export function Canvas({
           : { x: e.clientX - 200, y: e.clientY - 100 }
         onDropComponent(component, position)
       } catch {
-        // ignore
+        void 0
       }
     },
     [onDropComponent]
@@ -143,5 +137,3 @@ export function Canvas({
     </div>
   )
 }
-
-export { useNodesState, useEdgesState, addEdge }

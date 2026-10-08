@@ -105,7 +105,7 @@ export interface DiagramYamlOptions {
 }
 
 function escapeYamlString(s: string): string {
-  if (s.includes('\n') || s.includes(':') || s.includes('"') || s.includes('#')) return `"${s.replace(/"/g, '\\"')}"`
+  if (s.includes('\n') || s.includes('\r') || s.includes(':') || s.includes('"') || s.includes('#')) return JSON.stringify(s)
   return s
 }
 

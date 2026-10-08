@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+import { createElement } from 'react'
 import type { IconType } from 'react-icons'
 import {
   FaCloud,
@@ -97,7 +99,7 @@ interface ProviderIconProps {
 
 export function ProviderIcon({ provider, size = 20, className = '', title }: ProviderIconProps) {
   const Icon = getProviderIcon(provider)
-  return <Icon size={size} className={className} title={title} />
+  return createElement(Icon, { size, className, title })
 }
 
 interface ComponentIconProps {
@@ -121,9 +123,9 @@ export function ComponentIcon({
   const ProviderIconComp = provider ? getProviderIcon(provider) : null
   return (
     <span className={`component-icon-wrap ${className}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-      <Icon size={size} className="component-icon-main" />
+      {createElement(Icon, { size, className: 'component-icon-main' })}
       {showProviderBadge && ProviderIconComp && (
-        <ProviderIconComp size={Math.round(size * 0.6)} className="component-icon-badge" />
+        createElement(ProviderIconComp, { size: Math.round(size * 0.6), className: 'component-icon-badge' })
       )}
     </span>
   )

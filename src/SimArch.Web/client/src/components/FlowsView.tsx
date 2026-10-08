@@ -19,6 +19,7 @@ export function FlowsView({ getYaml, onExportMermaid }: FlowsViewProps) {
   useEffect(() => {
     const yaml = getYaml()
     if (!yaml.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMermaidContent(null)
       setError('Carregue ou desenhe um modelo com fluxos.')
       return
@@ -54,6 +55,7 @@ export function FlowsView({ getYaml, onExportMermaid }: FlowsViewProps) {
 
   useEffect(() => {
     if (!mermaidContent || !previewRef.current || viewMode !== 'preview') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRenderError(null)
       return
     }

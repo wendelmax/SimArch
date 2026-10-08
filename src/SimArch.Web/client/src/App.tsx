@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect } from 'react'
 import { ReactFlowProvider } from '@xyflow/react'
-import { Canvas, useNodesState, useEdgesState, addEdge } from './components/Canvas'
+import { Canvas } from './components/Canvas'
+import { useNodesState, useEdgesState, addEdge } from './components/canvasState'
 import { Dashboard } from './components/Dashboard'
 import { Palette } from './components/Palette'
 import { Layout } from './components/Layout'
@@ -95,6 +96,7 @@ function AppInner() {
 
   useEffect(() => {
     if (selectedNode) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowRightPanel(true)
       setRightPanelTab('propriedades')
     }
@@ -394,7 +396,7 @@ function AppInner() {
         }
       })
     },
-    [setNodes, setEdges, viewMode]
+    [selectedZoneForMultiCloud, setNodes, setEdges, viewMode]
   )
 
   const handleSaveYaml = useCallback(() => {

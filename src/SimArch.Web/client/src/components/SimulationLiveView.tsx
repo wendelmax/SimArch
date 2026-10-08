@@ -30,7 +30,6 @@ function LiveViewInner({
   edges,
   elapsedSec,
   serviceMetrics,
-  constraintResults: _constraintResults,
   onRunSimulation,
   onClose,
   isRunning = false,
